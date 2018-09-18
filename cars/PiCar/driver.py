@@ -64,7 +64,7 @@ class termCondition(Observer):
         return self.term
 
 
-def server_process(stop_ev, sock, stream):
+def server_process(stop_ev, stream):
     while not stop_ev.isSet():
         if stream.tell()!=0:
             commands_lock.acquire()
@@ -84,11 +84,12 @@ if args.headless:
     controller.registerFunction('X', Flag("dc_start", {}, autofire=False).fire)
     controller.registerFunction('Y', Flag("dc_stop", {}, autofire=False).fire)
     controller.start_thread()
+    server_thread=threading.Thread(target=server_process, args=[tc, stream])
     collector=DataCollector()
 
 else:
     js_source=SocketReader(commands_in_sock) #joystick input from socket
-    server_thread=threading.Thread(target=server_process, args=[tc, stream_out_sock, stream])
+    server_thread=threading.Thread(target=server_process, args=[tc, stream])
     controller=ControllerObject(js_source) #controller handler
     controller.start_thread()
     streamer=Streamer(stream_out_sock)
@@ -99,8 +100,8 @@ try:
     camera=picamera.PiCamera()
     camera.resolution=(128, 96)
     camera.framerate=20
-    if not args.headless:
-        server_thread.start()
+    #if not args.headless:
+    server_thread.start()
     time.sleep(2)
     camera.start_recording(stream, format='rgb')
     while not tc.isSet():
@@ -111,8 +112,8 @@ try:
         commands_lock.release()
         time.sleep(.01)
     camera.stop_recording()
-    if not args.headless:
-        server_thread.join()
+    #if not args.headless:
+    server_thread.join()
 
 finally:
     if not args.headless:

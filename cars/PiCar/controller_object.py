@@ -67,7 +67,6 @@ class ControllerObject(object):
                 'Y':None, 'LB':None, 'RB':None, 'screen':None, 'menu':None}
         self.direction=True
         self.forceStop=False
-        self.quit_flag=False
 
     def start_thread(self):
         #start thread to read from source
@@ -75,7 +74,7 @@ class ControllerObject(object):
 
     def proc_thread(self):
         #thread to read input from source
-        while self.stop_event.isSet()==False and self.quit_flag==False:
+        while self.stop_event.isSet()==False:
             ev_buf=self.source.read(8)
             if ev_buf!=-1:
                 time, value, in_type, in_id=struct.unpack('IhBB', ev_buf) #TODO FIXME
@@ -98,9 +97,8 @@ class ControllerObject(object):
         if self.forceStop==True:
             output[0]=0
             self.forceStop=False
-        if self.quit_flag==True:
-            output=-1
         self.carlock.release()
+        #print(output)
         return output
 
     def campoll(self):
@@ -120,9 +118,8 @@ class ControllerObject(object):
         return ((value-JS_MIN_ANALOG)/JS_ANALOG_RANGE)*(outmax-outmin)+outmin
 
     def handleXbox(self, value):
-        self.carlock.acquire()
-        self.quit_flag=True
-        self.carlock.release()
+        Flag("stop_stream", {})
+
 
     def handleB(self, value):
         if value==1:

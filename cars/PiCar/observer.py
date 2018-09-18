@@ -15,11 +15,13 @@ class Flag(object):
         for key, value in attr_dict.items():
             setattr(self, key, value)
         if autofire:
-            print(self.name+"firing")
+            #print(self.name+"firing")
             self.fire()
 
-    def fire(self):
-        print(self.name+"delayed fire")
+    def fire(self, value=None):
+        #print(self.name+"delayed fire")
+        if value is not None:
+            setattr(self, "value", value)
         if self.name in Observer.observables.keys():
             for cb in Observer.observables[self.name]:
                 cb(self)
